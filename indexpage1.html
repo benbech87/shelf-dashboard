@@ -1,1 +1,235 @@
-const HARDCODED_KEY = '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';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pickup Shelf — Entry Point</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #666;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --green-bg: rgba(34,197,94,0.1);
+    --amber-bg: rgba(245,158,11,0.1);
+    --red-bg: rgba(239,68,68,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 2rem; }
+  .top { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2.5rem; gap: 1rem; flex-wrap: wrap; }
+  .wordmark { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
+  h1 span { font-weight: 500; }
+  .meta { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 6px; }
+  .btn { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; padding: 8px 16px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; border-radius: 4px; text-transform: uppercase; transition: all 0.15s; }
+  .btn:hover { border-color: var(--text); color: var(--text); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+  .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .tab { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 20px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+  th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; font-weight: 400; }
+  td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface); }
+  .order { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .customer { font-weight: 500; font-size: 14px; }
+  .phone { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .date-cell { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .rag-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; white-space: nowrap; }
+  .rag-green { background: var(--green-bg); color: var(--green); }
+  .rag-amber { background: var(--amber-bg); color: var(--amber); }
+  .rag-red { background: var(--red-bg); color: var(--red); }
+  .link-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 3px; transition: all 0.15s; white-space: nowrap; }
+  .link-btn:hover { color: var(--text); border-color: var(--text); }
+  .summary { margin-top: 1.5rem; padding: 1rem 0; border-top: 1px solid var(--border); display: flex; gap: 2rem; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 3px; }
+  .stat-num { font-size: 24px; font-weight: 300; letter-spacing: -0.02em; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .stat-num.red { color: var(--red); }
+  .stat-num.amber { color: var(--amber); }
+  .stat-num.green { color: var(--green); }
+  .center { text-align: center; padding: 3rem; color: var(--muted); font-size: 13px; }
+  .error { color: var(--red); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 1.5px solid var(--border); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 600px) { body { padding: 1rem; } }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="wordmark">Entry Point</div>
+    <h1>Pickup <span>Shelf</span></h1>
+    <div class="meta" id="last-updated">—</div>
+  </div>
+  <button class="btn" id="refresh-btn" onclick="loadData()">↺ Refresh</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-shelf" onclick="switchTab('shelf')">On shelf</button>
+  <button class="tab" id="tab-collected" onclick="switchTab('collected')">Collected</button>
+</div>
+
+<div id="shelf-panel" class="tab-panel active">
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:100px;">Status</th>
+        <th style="width:80px;">Order</th>
+        <th>Customer</th>
+        <th style="width:130px;">Phone</th>
+        <th style="width:130px;">Added</th>
+        <th style="width:70px;">Days</th>
+        <th style="width:60px;"></th>
+      </tr></thead>
+      <tbody id="shelf-body">
+        <tr><td colspan="7" class="center"><span class="spinner"></span>Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="summary" id="shelf-summary" style="display:none;"></div>
+</div>
+
+<div id="collected-panel" class="tab-panel">
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:80px;">Order</th>
+        <th>Customer</th>
+        <th style="width:130px;">Phone</th>
+        <th style="width:130px;">Added</th>
+        <th style="width:60px;"></th>
+      </tr></thead>
+      <tbody id="collected-body">
+        <tr><td colspan="5" class="center"><span class="spinner"></span>Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="summary" id="collected-summary" style="display:none;"></div>
+</div>
+
+<script>
+const WEBHOOK = 'https://hook.eu1.make.com/wnimvaetmb3z49son4a7fst7jxyiboon';
+const SHOPIFY = 'https://entry-point.myshopify.com/admin/orders/';
+
+function switchTab(name) {
+  ['shelf','collected'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById(t + '-panel').classList.toggle('active', t === name);
+  });
+}
+
+function daysDiff(ts) {
+  return Math.floor((Date.now() - new Date(ts)) / 86400000);
+}
+
+function ragPill(days) {
+  if (days >= 15) return `<span class="rag-pill rag-red">● ${days}d</span>`;
+  if (days >= 8)  return `<span class="rag-pill rag-amber">● ${days}d</span>`;
+  return `<span class="rag-pill rag-green">● ${days === 0 ? 'Today' : days + 'd'}</span>`;
+}
+
+function daysLabel(days) { return days === 0 ? 'Today' : days + 'd'; }
+function daysColor(days) { return days >= 15 ? 'var(--red)' : days >= 8 ? 'var(--amber)' : 'var(--muted)'; }
+function normalise(r) { return r.data ? r.data : r; }
+
+function renderShelf(records) {
+  const shelf = records.filter(r => (normalise(r).status || '') === 'On Shelf');
+  shelf.sort((a, b) => new Date(normalise(a).date_timestamp) - new Date(normalise(b).date_timestamp));
+  const tbody = document.getElementById('shelf-body');
+  if (!shelf.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="center">No orders on shelf</td></tr>';
+    return;
+  }
+  let green = 0, amber = 0, red = 0;
+  tbody.innerHTML = shelf.map(r => {
+    const d = normalise(r);
+    const days = daysDiff(d.date_timestamp);
+    if (days >= 15) red++; else if (days >= 8) amber++; else green++;
+    return `<tr>
+      <td>${ragPill(days)}</td>
+      <td class="order">#${d.order}</td>
+      <td class="customer">${d.customer || '—'}</td>
+      <td class="phone">${d.phone && d.phone !== 'N/A' ? d.phone : '—'}</td>
+      <td class="date-cell">${d.date_added || '—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:${daysColor(days)}">${daysLabel(days)}</td>
+      <td><a href="${SHOPIFY}${d.order}" class="link-btn" target="_blank">View</a></td>
+    </tr>`;
+  }).join('');
+  const s = document.getElementById('shelf-summary');
+  s.style.display = 'flex';
+  s.innerHTML = `
+    <div class="stat"><span class="stat-num">${shelf.length}</span><span class="stat-label">On shelf</span></div>
+    ${red ? `<div class="stat"><span class="stat-num red">${red}</span><span class="stat-label">Urgent 15+ days</span></div>` : ''}
+    ${amber ? `<div class="stat"><span class="stat-num amber">${amber}</span><span class="stat-label">Ageing 8–14 days</span></div>` : ''}
+    <div class="stat"><span class="stat-num green">${green}</span><span class="stat-label">Fresh 1–7 days</span></div>`;
+}
+
+function renderCollected(records) {
+  const col = records.filter(r => (normalise(r).status || '').toLowerCase().includes('collect'));
+  col.sort((a, b) => new Date(normalise(b).date_timestamp) - new Date(normalise(a).date_timestamp));
+  const tbody = document.getElementById('collected-body');
+  if (!col.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="center">No collected orders</td></tr>';
+    return;
+  }
+  tbody.innerHTML = col.map(r => {
+    const d = normalise(r);
+    return `<tr>
+      <td class="order">#${d.order}</td>
+      <td class="customer">${d.customer || '—'}</td>
+      <td class="phone">${d.phone && d.phone !== 'N/A' ? d.phone : '—'}</td>
+      <td class="date-cell">${d.date_added || '—'}</td>
+      <td><a href="${SHOPIFY}${d.order}" class="link-btn" target="_blank">View</a></td>
+    </tr>`;
+  }).join('');
+  const s = document.getElementById('collected-summary');
+  s.style.display = 'flex';
+  s.innerHTML = `<div class="stat"><span class="stat-num">${col.length}</span><span class="stat-label">Collected</span></div>`;
+}
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  document.getElementById('shelf-body').innerHTML = '<tr><td colspan="7" class="center"><span class="spinner"></span>Loading...</td></tr>';
+  document.getElementById('collected-body').innerHTML = '<tr><td colspan="5" class="center"><span class="spinner"></span>Loading...</td></tr>';
+  document.getElementById('shelf-summary').style.display = 'none';
+  document.getElementById('collected-summary').style.display = 'none';
+
+  try {
+    const res = await fetch(WEBHOOK);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    let records = [];
+    try {
+      const parsed = JSON.parse(text);
+      records = Array.isArray(parsed) ? parsed : (parsed.records || parsed.data || Object.values(parsed));
+    } catch(e) { throw new Error('Could not parse response from Make'); }
+    if (!records.length) throw new Error('No records returned — check the Make scenario is ON');
+    renderShelf(records);
+    renderCollected(records);
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+  } catch(err) {
+    const msg = `<tr><td colspan="7" class="center error">Error: ${err.message}</td></tr>`;
+    document.getElementById('shelf-body').innerHTML = msg;
+    document.getElementById('collected-body').innerHTML = msg.replace('7','5');
+  }
+  btn.disabled = false;
+  btn.textContent = '↺ Refresh';
+}
+
+loadData();
+</script>
+</body>
+</html>
